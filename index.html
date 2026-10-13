@@ -22,13 +22,10 @@
     color: #000;
     font-family: "Courier Prime", "Courier New", Courier, monospace;
     font-size: 16px;
-    line-height: 1.5;
+    line-height: 1.55;
   }
 
-  header {
-    text-align: center;
-    padding: 18vh 6vw 14vh;
-  }
+  header { text-align: center; padding: 18vh 6vw 14vh; }
   h1 {
     font-size: clamp(1.6rem, 4vw, 2.4rem);
     font-weight: 700;
@@ -39,58 +36,59 @@
   }
   header p { margin-top: 1.5rem; }
 
-  main { max-width: 1280px; margin: 0 auto; padding: 0 5vw 14vh; }
-  .ruudukko {
+  main { max-width: 1280px; margin: 0 auto; padding: 0 5vw 10vh; }
+
+  /* Kampanja: teksti vasemmalla, videot oikealla */
+  .kampanja {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 3.5rem 2rem;
+    grid-template-columns: 1fr 2fr;
+    gap: 2.5rem;
+    padding: 4.5rem 0;
+    border-top: 1px solid #000;
   }
+  .kampanja:first-child { border-top: 0; padding-top: 0; }
+  .kampanja h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    margin-bottom: 1rem;
+  }
+  .kampanja .kuvaus { max-width: 38ch; }
+
+  .videot { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem 1.5rem; align-content: start; }
+  .videot.yksi { grid-template-columns: 1fr; }
+
   .tyo { cursor: pointer; }
   .tyo:focus-visible { outline: 1px solid #000; outline-offset: 6px; }
-  .kuva {
-    position: relative;
-    aspect-ratio: 16 / 9;
-    background: #f2f2f2;
-    overflow: hidden;
-  }
+  .kuva { position: relative; aspect-ratio: 16 / 9; background: #f2f2f2; overflow: hidden; }
   .kuva img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .kuva .varakuva {
-    position: absolute; inset: 0;
-    display: grid; place-items: center;
-    color: #bbb;
-  }
-  .nimi { margin-top: .8rem; }
-  .tyo:hover .nimi, .tyo:focus-visible .nimi { text-decoration: underline; }
+  .versio { margin-top: .6rem; }
+  .tyo:hover .versio, .tyo:focus-visible .versio { text-decoration: underline; }
 
   footer { text-align: center; padding: 0 6vw 8vh; }
 
   /* Katseluikkuna */
   .ikkuna {
-    position: fixed; inset: 0;
-    background: #fff;
-    display: none;
-    flex-direction: column; align-items: center; justify-content: center;
-    padding: 4vh 5vw;
-    z-index: 10;
+    position: fixed; inset: 0; background: #fff;
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    padding: 4vh 5vw; z-index: 10;
   }
   .ikkuna.auki { display: flex; }
   .soitin, .ikkunan-ala { width: min(100%, calc(78vh * 16 / 9)); }
   .soitin { aspect-ratio: 16 / 9; background: #000; }
   .soitin iframe { width: 100%; height: 100%; border: 0; display: block; }
-  .ikkunan-ala {
-    display: flex; justify-content: space-between; align-items: center; gap: 1rem;
-    margin-top: 1rem;
-  }
-  button {
-    font: inherit; color: #000; background: none; border: 0;
-    cursor: pointer; padding: .3rem .4rem;
-  }
+  .ikkunan-ala { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: 1rem; }
+  button { font: inherit; color: #000; background: none; border: 0; cursor: pointer; padding: .3rem .4rem; }
   button:hover { text-decoration: underline; }
   .sulje { position: absolute; top: 3vh; right: 4vw; }
 
-  @media (max-width: 900px) { .ruudukko { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 860px) {
+    .kampanja { grid-template-columns: 1fr; gap: 1.5rem; padding: 3.5rem 0; }
+    .kampanja .kuvaus { max-width: 60ch; }
+  }
   @media (max-width: 560px) {
-    .ruudukko { grid-template-columns: 1fr; gap: 2.5rem; }
+    .videot { grid-template-columns: 1fr; }
     header { padding: 12vh 6vw 10vh; }
   }
 </style>
@@ -102,9 +100,7 @@
   <p>Luova suunnittelija<br>Sanoma Content Studio (ex-Videolle)</p>
 </header>
 
-<main>
-  <section class="ruudukko" id="ruudukko" aria-label="Videotyöt"></section>
-</main>
+<main id="tyot" aria-label="Videotyöt"></main>
 
 <footer>© <span id="vuosi"></span> Joni Mussalo</footer>
 
@@ -122,81 +118,176 @@
 
 <script>
 /* =========================================================
-   VIDEOT – muokkaa vain tätä luetteloa.
-   1. Drivessä: oikea klikkaus videoon → Jaa → Yleinen käyttöoikeus:
-      "Kaikki, joilla on linkki" (katsoja) → Kopioi linkki.
-   2. Liitä linkki lainausmerkkien väliin ja kirjoita nimi.
-   3. Esikatselukuva: tallenna kuva kansioon "kuvat" ja lisää
-      riville esim. kuva: "kuvat/23.jpg".
+   KAMPANJAT – muokkaa vain tätä luetteloa.
+   - nimi:    kampanjan otsikko
+   - kuvaus:  teksti kampanjan vierelle (voi jättää tyhjäksi "")
+   - videot:  versio = videon alla näkyvä nimi (jos kampanjassa on useampi video)
+              linkki = Driven jakolinkki ("Kaikki, joilla on linkki")
+              kuva   = esikatselukuva kansiossa "kuvat"
    ========================================================= */
-const videot = [
-  { nimi: "Tradenomit – Iso paha tuuletin (keikka)",   linkki: "https://drive.google.com/file/d/1Mxj3vUnJ54bIbN4vj85yaUpeQaLHKCIE/view?usp=sharing", kuva: "kuvat/01.jpg" },
-  { nimi: "Tradenomit – Iso paha tuuletin (toimisto)", linkki: "https://drive.google.com/file/d/1yq1wApKepQ1WMRZtzNuas1oSGDAaGvPB/view?usp=sharing", kuva: "kuvat/02.jpg" },
-  { nimi: "Veripalvelu – Markku, tosielämän supermies", linkki: "https://drive.google.com/file/d/1g_-sCsHsO_g0Rm65XJ0GwWT1rFsYyfnt/view?usp=sharing", kuva: "kuvat/03.jpg" },
-  { nimi: "Lounea – Yhteys on (suomalainen)",           linkki: "https://drive.google.com/file/d/10zCl5au_lFQAWGGFjE2NSIWYmwKTHJaL/view?usp=sharing", kuva: "kuvat/04.jpg" },
-  { nimi: "Lounea – Yhteys on (vakaus)",                linkki: "https://drive.google.com/file/d/1T8mmAPJvgqEgDNGigJiVxu0RuntqwbOI/view?usp=sharing", kuva: "kuvat/05.jpg" },
-  { nimi: "Stora Enso Metsä – Se helpottaa (hammaslääkäri)", linkki: "https://drive.google.com/file/d/1aYCdFhP7BQXEtTvLHiGvYOCKLC24QoAn/view?usp=sharing", kuva: "kuvat/06.jpg" },
-  { nimi: "Stora Enso Metsä – Se helpottaa (parturi)",       linkki: "https://drive.google.com/file/d/1fB83TqiDoZPVP36vVj58d6B8zc-hUmKL/view?usp=sharing", kuva: "kuvat/07.jpg" },
-  { nimi: "Stora Enso Metsä – Se helpottaa (korjaamo)",      linkki: "https://drive.google.com/file/d/19FV8svkD7lzAaTS7yGtsxZ5gC_8cg57X/view?usp=sharing", kuva: "kuvat/08.jpg" },
-  { nimi: "Verkkokauppa.com – Pressa (lastentarvikkeet)",    linkki: "https://drive.google.com/file/d/1LRGp1_t7iDkmDAU4fr-CHFOV69OoZBWv/view?usp=sharing", kuva: "kuvat/09.jpg" },
-  { nimi: "Verkkokauppa.com – Pressa (grillitarvikkeet)",    linkki: "https://drive.google.com/file/d/188eI_K0x6pMXJ0X9vErTBC14XdixUvxQ/view?usp=sharing", kuva: "kuvat/10.jpg" },
-  { nimi: "Coinmotion – Pidit siitä tai et",                 linkki: "https://drive.google.com/file/d/1Me853HkJaQSXsUEZpWL9NwBWVjMbZGQy/view?usp=sharing", kuva: "kuvat/11.jpg" },
-  { nimi: "Veikkaus – Synttärit",                            linkki: "https://drive.google.com/file/d/1lsLWBOlUR8TdkkN6BRRyPCT75MsBLabp/view?usp=sharing", kuva: "kuvat/12.jpg" },
-  { nimi: "Akava – Älytön toimisto (esitystekniikka)",       linkki: "https://drive.google.com/file/d/1la9KJ468iHieVsGMNx9Nx6bH_95qn-hx/view?usp=sharing", kuva: "kuvat/13.jpg" },
-  { nimi: "Akava – Älytön toimisto (viestintä)",             linkki: "https://drive.google.com/file/d/13yS0eJQwpryPGsqoAH_XearBAvuX0Eea/view?usp=sharing", kuva: "kuvat/14.jpg" },
-  { nimi: "Akava – Älytön toimisto (tiedonhallinta)",        linkki: "https://drive.google.com/file/d/19yYR0eZMB_WOEe_GxSNAl_INR7jNyzf5/view?usp=sharing", kuva: "kuvat/15.jpg" },
-  { nimi: "TEK – Vyö museossa",                              linkki: "https://drive.google.com/file/d/1mblT-eXiyAPUywBn7_LQlk9RB5ssbAi7/view?usp=sharing", kuva: "kuvat/16.jpg" },
-  { nimi: "TEK – Rekry",                                     linkki: "https://drive.google.com/file/d/1iQC-2U5vzXiS0S8bcKC10mf5HQj5gigb/view?usp=sharing", kuva: "kuvat/17.jpg" },
-  { nimi: "TEK – Hallopedi",                                 linkki: "https://drive.google.com/file/d/1pBzfQCLSQ5R6LY7sopqd7D7wRlNLpmbK/view?usp=sharing", kuva: "kuvat/18.jpg" },
-  { nimi: "TEK – Me tekniikan takana",                       linkki: "https://drive.google.com/file/d/1zkyK7L-9cSMoG83EwabCodA3gvcsvLey/view?usp=sharing", kuva: "kuvat/19.jpg" },
-  { nimi: "NAL – Viihtyisä taloyhtiö",                       linkki: "https://drive.google.com/file/d/1uPIKMji0TIKXEnxzJAHH9rjzk0az3uDR/view?usp=sharing", kuva: "kuvat/20.jpg" },
-  { nimi: "Hobby Hall – Toimii (katulätkä)",                 linkki: "https://drive.google.com/file/d/1qURhhuKUkl03LNnb-GdHSH0XFr7NSUCa/view?usp=sharing", kuva: "kuvat/21.jpg" },
-  { nimi: "Hobby Hall – Toimii (kanootti)",                  linkki: "https://drive.google.com/file/d/1dRfCa5yfRJ0FYSwCC6AcpmUqF4gPDs3i/view?usp=sharing", kuva: "kuvat/22.jpg" },
+const kampanjat = [
+  {
+    nimi: "Veripalvelu – Markku, tosielämän aito supermies",
+    kuvaus: "Veripalvelulla on ongelma: miehet eivät luovuta riittävästi verta. Niinpä suunnittelin ja käsikirjoitin filmin puhuttelemaan miehiä, jotka eivät sankaroi vaan kantavat aidosti vastuuta. Syntyi konsepti: Markku – tosielämän aito supermies. Kivasti meni. Filmi valittiin vuonna 2023 vuoden parhaaksi elokuvateatterimainokseksi.",
+    videot: [
+      { versio: "", linkki: "https://drive.google.com/file/d/1g_-sCsHsO_g0Rm65XJ0GwWT1rFsYyfnt/view", kuva: "kuvat/03.jpg" },
+    ],
+  },
+  {
+    nimi: "Tradenomit – Iso paha tuuletin",
+    kuvaus: "Tradenomeilla oli tarve tehdä perinteisestä liittoviestinnästä erottuvaa mainontaa. Haasteena casessa oli se, että uhkakuvista viestiminen piti tehdä liikaa lannistamatta ja työnantajia sormella osoittamatta. Ratkaisu: kerrotaan tarina absurdia huumoria hyödyntäen ja osoitetaan sormella työnantajien sijaan muutoksen paskaisia tuulia.",
+    videot: [
+      { versio: "Keikka",   linkki: "https://drive.google.com/file/d/1Mxj3vUnJ54bIbN4vj85yaUpeQaLHKCIE/view", kuva: "kuvat/01.jpg" },
+      { versio: "Toimisto", linkki: "https://drive.google.com/file/d/1yq1wApKepQ1WMRZtzNuas1oSGDAaGvPB/view", kuva: "kuvat/02.jpg" },
+    ],
+  },
+  {
+    nimi: "Lounea – Yhteys on",
+    kuvaus: "Valokuitufirmana erottautuminen on hankalaa, kaikki myyvät likipitäen samaa kaapelia. Lounealla tosin on yksi valttikortti yli muiden: kotimaisuus. Niinpä konseptoin ja käsikirjoitin heille läpeensä tätä ominaisuutta henkivän videosarjan.",
+    videot: [
+      { versio: "Suomalainen", linkki: "https://drive.google.com/file/d/10zCl5au_lFQAWGGFjE2NSIWYmwKTHJaL/view", kuva: "kuvat/04.jpg" },
+      { versio: "Vakaus",      linkki: "https://drive.google.com/file/d/1T8mmAPJvgqEgDNGigJiVxu0RuntqwbOI/view", kuva: "kuvat/05.jpg" },
+    ],
+  },
+  {
+    nimi: "Stora Enso Metsä – Se helpottaa",
+    kuvaus: "Tiedätkö sen tunteen, kun arki lyö päin pläsiä, mutta pinna ei kiristy, koska perstaskut ovat täynnä riihikuivaa? En minäkään, mutta jos omistaisin metsää ja olisin Stora Enson asiakas, niin tietäisin.",
+    videot: [
+      { versio: "Hammaslääkäri", linkki: "https://drive.google.com/file/d/1aYCdFhP7BQXEtTvLHiGvYOCKLC24QoAn/view", kuva: "kuvat/06.jpg" },
+      { versio: "Parturi",       linkki: "https://drive.google.com/file/d/1fB83TqiDoZPVP36vVj58d6B8zc-hUmKL/view", kuva: "kuvat/07.jpg" },
+      { versio: "Korjaamo",      linkki: "https://drive.google.com/file/d/19FV8svkD7lzAaTS7yGtsxZ5gC_8cg57X/view", kuva: "kuvat/08.jpg" },
+    ],
+  },
+  {
+    nimi: "Verkkokauppa.com – Pressa",
+    kuvaus: "Kun presidentti saa ikämiehenä lapsen, ei voi muuta kuin myydä, käsikirjoittaa ja tuottaa videosarjan, jossa kasvoton valtiomies asioi vaippakaupoilla samalla rouvansa kanssa viestitellen.",
+    videot: [
+      { versio: "Lastentarvikkeet", linkki: "https://drive.google.com/file/d/1LRGp1_t7iDkmDAU4fr-CHFOV69OoZBWv/view", kuva: "kuvat/09.jpg" },
+      { versio: "Grillitarvikkeet", linkki: "https://drive.google.com/file/d/188eI_K0x6pMXJ0X9vErTBC14XdixUvxQ/view", kuva: "kuvat/10.jpg" },
+    ],
+  },
+  {
+    nimi: "Coinmotion – Pidit siitä tai et",
+    kuvaus: "Elettiin aikaa, kun kryptovaluutoilla oli tasan yksi äänensävy: äärimmäisyys. Huomiota, mutta ei luottamusta herättävää. Suunnittelin mainoksen, jossa tehtiin toisin.",
+    videot: [
+      { versio: "", linkki: "https://drive.google.com/file/d/1Me853HkJaQSXsUEZpWL9NwBWVjMbZGQy/view", kuva: "kuvat/11.jpg" },
+    ],
+  },
+  {
+    nimi: "Veikkaus – Synttärit",
+    kuvaus: "Sisältömäinen videosketsi videosomen alkuhämärässä. Joskus on hienoa olla suunnittelijana aikaansa edellä, tiesi sitä tai ei.",
+    videot: [
+      { versio: "", linkki: "https://drive.google.com/file/d/1lsLWBOlUR8TdkkN6BRRyPCT75MsBLabp/view", kuva: "kuvat/12.jpg" },
+    ],
+  },
+  {
+    nimi: "Akava – Älytön toimisto",
+    kuvaus: "Digidigihommat menevät päivittäin tunteisiin, mutta faktahan on se, että elämä olisi todella perseestä ilman nykypäiväisiä vehkeitä. Aika lailla tämän viestin Akava halusi saada perille, ja brändiviihteellähän asia hoitui hienosti. Hauskaa oli ja tuli.",
+    videot: [
+      { versio: "Esitystekniikka", linkki: "https://drive.google.com/file/d/1la9KJ468iHieVsGMNx9Nx6bH_95qn-hx/view", kuva: "kuvat/13.jpg" },
+      { versio: "Viestintä",       linkki: "https://drive.google.com/file/d/13yS0eJQwpryPGsqoAH_XearBAvuX0Eea/view", kuva: "kuvat/14.jpg" },
+      { versio: "Tiedonhallinta",  linkki: "https://drive.google.com/file/d/19yYR0eZMB_WOEe_GxSNAl_INR7jNyzf5/view", kuva: "kuvat/15.jpg" },
+    ],
+  },
+  {
+    nimi: "TEK",
+    kuvaus: "",
+    videot: [
+      { versio: "Vyö museossa",        linkki: "https://drive.google.com/file/d/1mblT-eXiyAPUywBn7_LQlk9RB5ssbAi7/view", kuva: "kuvat/16.jpg" },
+      { versio: "Rekry",               linkki: "https://drive.google.com/file/d/1iQC-2U5vzXiS0S8bcKC10mf5HQj5gigb/view", kuva: "kuvat/17.jpg" },
+      { versio: "Hallopedi",           linkki: "https://drive.google.com/file/d/1pBzfQCLSQ5R6LY7sopqd7D7wRlNLpmbK/view", kuva: "kuvat/18.jpg" },
+      { versio: "Me tekniikan takana", linkki: "https://drive.google.com/file/d/1zkyK7L-9cSMoG83EwabCodA3gvcsvLey/view", kuva: "kuvat/19.jpg" },
+    ],
+  },
+  {
+    nimi: "NAL – Viihtyisä taloyhtiö",
+    kuvaus: "NAL oli sitä mieltä, että nuorten asukkaiden olisi hyvä tuntea siisteysasioissa pientä pistoa sydämessään. Pistin piikittelyvaihteen sisään ja menoksi.",
+    videot: [
+      { versio: "", linkki: "https://drive.google.com/file/d/1uPIKMji0TIKXEnxzJAHH9rjzk0az3uDR/view", kuva: "kuvat/20.jpg" },
+    ],
+  },
+  {
+    nimi: "Hobby Hall – Toimii",
+    kuvaus: "Näiden mainoksien kommenteissa joku katsoja toivoi, että minua, videon käsikirjoittajaa, lyötäisiin naamaan. Kova pätkä.",
+    videot: [
+      { versio: "Katulätkä", linkki: "https://drive.google.com/file/d/1qURhhuKUkl03LNnb-GdHSH0XFr7NSUCa/view", kuva: "kuvat/21.jpg" },
+      { versio: "Kanootti",  linkki: "https://drive.google.com/file/d/1dRfCa5yfRJ0FYSwCC6AcpmUqF4gPDs3i/view", kuva: "kuvat/22.jpg" },
+    ],
+  },
 ];
 
 /* ---------- Älä muokkaa tämän alapuolelta ---------- */
-const kaksi = n => String(n).padStart(2, "0");
 function driveId(linkki) {
   if (!linkki) return null;
   const o = linkki.match(/\/d\/([\w-]+)/) || linkki.match(/[?&]id=([\w-]+)/);
-  return o ? o[1] : (/^[\w-]{20,}$/.test(linkki.trim()) ? linkki.trim() : null);
+  return o ? o[1] : null;
 }
+const teksti = (tag, sisalto, luokka) => {
+  const el = document.createElement(tag);
+  if (luokka) el.className = luokka;
+  el.textContent = sisalto;
+  return el;
+};
 
-function kuvaHtml(v) {
-  if (!v.kuva) return "";
-  return `<img loading="lazy" alt="" src="${v.kuva}" onerror="this.remove()">`;
-}
+const tyot = document.getElementById("tyot");
+const kaikki = [];   // kaikki videot järjestyksessä katseluikkunan selausta varten
 
-const ruudukko = document.getElementById("ruudukko");
-videot.forEach((v, i) => {
-  const id = driveId(v.linkki);
-  const tyo = document.createElement("article");
-  tyo.className = "tyo";
-  tyo.tabIndex = 0;
-  tyo.setAttribute("role", "button");
-  tyo.setAttribute("aria-label", "Katso: " + v.nimi);
-  tyo.innerHTML = `
-    <div class="kuva">
-      <div class="varakuva">${kaksi(i + 1)}</div>
-      ${kuvaHtml(v)}
-    </div>
-    <div class="nimi"></div>`;
-  tyo.querySelector(".nimi").textContent = kaksi(i + 1) + ". " + v.nimi;
-  tyo.addEventListener("click", () => avaa(i));
-  tyo.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); avaa(i); } });
-  ruudukko.appendChild(tyo);
+kampanjat.forEach(k => {
+  const osio = document.createElement("section");
+  osio.className = "kampanja";
+
+  const vasen = document.createElement("div");
+  vasen.appendChild(teksti("h2", k.nimi));
+  if (k.kuvaus) vasen.appendChild(teksti("p", k.kuvaus, "kuvaus"));
+  osio.appendChild(vasen);
+
+  const videot = document.createElement("div");
+  videot.className = "videot" + (k.videot.length === 1 ? " yksi" : "");
+  k.videot.forEach(v => {
+    const indeksi = kaikki.length;
+    const otsikko = v.versio ? `${k.nimi} (${v.versio.toLowerCase()})` : k.nimi;
+    kaikki.push({ otsikko, linkki: v.linkki });
+
+    const tyo = document.createElement("article");
+    tyo.className = "tyo";
+    tyo.tabIndex = 0;
+    tyo.setAttribute("role", "button");
+    tyo.setAttribute("aria-label", "Katso: " + otsikko);
+    const kuva = document.createElement("div");
+    kuva.className = "kuva";
+    if (v.kuva) {
+      const img = document.createElement("img");
+      img.loading = "lazy"; img.alt = ""; img.src = v.kuva;
+      img.onerror = () => img.remove();
+      kuva.appendChild(img);
+    }
+    tyo.appendChild(kuva);
+    if (v.versio) tyo.appendChild(teksti("div", v.versio, "versio"));
+    tyo.addEventListener("click", () => avaa(indeksi));
+    tyo.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); avaa(indeksi); } });
+    videot.appendChild(tyo);
+  });
+  osio.appendChild(videot);
+  tyot.appendChild(osio);
 });
 
+/* Katseluikkuna */
 const ikkuna = document.getElementById("ikkuna");
 const soitin = document.getElementById("soitin");
 let nykyinen = 0;
 function avaa(i) {
-  nykyinen = (i + videot.length) % videot.length;
-  const v = videot[nykyinen], id = driveId(v.linkki);
-  soitin.innerHTML = id
-    ? `<iframe src="https://drive.google.com/file/d/${id}/preview" allow="autoplay; fullscreen" allowfullscreen referrerpolicy="no-referrer"></iframe>`
-    : `<div style="height:100%;display:grid;place-items:center;color:#fff">Videon linkki puuttuu.</div>`;
-  document.getElementById("ikkunan-nimi").textContent = kaksi(nykyinen + 1) + ". " + v.nimi;
+  nykyinen = (i + kaikki.length) % kaikki.length;
+  const v = kaikki[nykyinen], id = driveId(v.linkki);
+  soitin.innerHTML = "";
+  if (id) {
+    const f = document.createElement("iframe");
+    f.src = `https://drive.google.com/file/d/${id}/preview`;
+    f.allow = "autoplay; fullscreen";
+    f.allowFullscreen = true;
+    f.referrerPolicy = "no-referrer";
+    soitin.appendChild(f);
+  }
+  document.getElementById("ikkunan-nimi").textContent = v.otsikko;
   ikkuna.classList.add("auki");
   document.body.style.overflow = "hidden";
 }
